@@ -1,5 +1,5 @@
 {
-  "originHash" : "ea540dc9883e19d8cf91b9c7f223e57a84ab784e6c356b087408dc4e8e9da295",
+  "originHash" : "cab9fc6fb4a9b956f78273309355a07a45fd473f22a3e9107b5e1eb78da2f147",
   "pins" : [
     {
       "identity" : "async-http-client",
@@ -179,6 +179,15 @@
       "state" : {
         "revision" : "61e4ca4b81b9e09e2ec863b00c340eb13497dac6",
         "version" : "1.5.0"
+      }
+    },
+    {
+      "identity" : "swiftdateparser",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/doozMen/SwiftDateParser.git",
+      "state" : {
+        "revision" : "b876f5fd49169d1859eaeeeb921a4c18a4bdae9c",
+        "version" : "1.0.0"
       }
     }
   ],

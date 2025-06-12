@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "aw-context": {
+      "command": "node",
+      "args": ["./dist/index.js"],
+      "cwd": "/Users/stijnwillems/Developer/opens-time-chat/aw-context-tool/aw-context-mcp-server"
+    }
+  }
+}

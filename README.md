@@ -2,6 +2,11 @@
 
 Add context annotations to your ActivityWatch data to track what you were working on.
 
+## Components
+
+- **aw-context**: Swift CLI tool for managing context annotations
+- **aw-context-mcp-server**: MCP (Model Context Protocol) server that exposes the CLI functionality to AI assistants like Claude
+
 ## Installation
 
 Prerequisites: macOS 12.0+, Swift 6.1+, ActivityWatch running on port 5600
@@ -82,6 +87,10 @@ aw-context enrich --start "2024-12-06 09:00" --end "2024-12-06 17:00"
 ## Data Storage
 
 Contexts stored as JSON in `~/.aw-context/context-YYYY-MM-DD.json`
+
+## MCP Server
+
+The MCP server allows AI assistants to interact with your ActivityWatch contexts. See [aw-context-mcp-server/README.md](aw-context-mcp-server/README.md) for setup instructions.
 
 ## License
 

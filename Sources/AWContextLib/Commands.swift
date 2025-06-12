@@ -1,5 +1,6 @@
 import ArgumentParser
 import Foundation
+import SwiftDateParser
 
 public struct ValidationError: LocalizedError {
     public let message: String
@@ -254,83 +255,37 @@ public struct Enrich: AsyncParsableCommand {
 // MARK: - Helper Functions
 
 public func parseDate(_ input: String) throws -> Date {
-    switch input.lowercased() {
-    case "today":
-        return Calendar.current.startOfDay(for: Date())
-    case "yesterday":
-        return Calendar.current.date(byAdding: .day, value: -1, to: Calendar.current.startOfDay(for: Date()))!
-    default:
-        guard let date = DateFormatter.dayFormat.date(from: input) else {
-            throw ValidationError("Invalid date format. Use YYYY-MM-DD, 'today', or 'yesterday'")
-        }
-        return date
+    do {
+        // SwiftDateParser handles natural language like "today", "yesterday", etc.
+        let parsedDate = try SwiftDateParser.parse(input)
+        
+        // For date-only parsing, we want to return the start of day
+        return Calendar.current.startOfDay(for: parsedDate)
+    } catch {
+        // If SwiftDateParser fails, provide a helpful error message
+        throw ValidationError("Invalid date format. Try: YYYY-MM-DD, 'today', 'yesterday', '3 days ago', 'next week', etc.")
     }
 }
 
 public func parseDateTimeOrNatural(_ input: String) throws -> Date {
-    // First try natural language
-    switch input.lowercased() {
-    case "today":
-        return Calendar.current.startOfDay(for: Date())
-    case "yesterday":
-        return Calendar.current.date(byAdding: .day, value: -1, to: Calendar.current.startOfDay(for: Date()))!
-    case "now":
-        return Date()
-    default:
-        break
-    }
-    
-    // Then try date formats
-    if let date = DateFormatter.dayFormat.date(from: input) {
-        return date
-    }
-    
-    // Finally try datetime formats
-    let formats = [
-        "yyyy-MM-dd HH:mm",
-        "HH:mm"
-    ]
-    
-    for format in formats {
-        let formatter = DateFormatter()
-        formatter.dateFormat = format
-        formatter.locale = Locale(identifier: "en_US_POSIX")
+    do {
+        // SwiftDateParser handles all natural language and various formats
+        let parsedDate = try SwiftDateParser.parse(input)
         
-        if let date = formatter.date(from: input) {
-            if format == "HH:mm" {
-                let calendar = Calendar.current
-                let now = Date()
-                let components = calendar.dateComponents([.hour, .minute], from: date)
-                return calendar.date(bySettingHour: components.hour!, minute: components.minute!, second: 0, of: now)!
-            }
-            return date
+        // Special handling for "today" and "yesterday" to ensure we get start of day
+        switch input.lowercased() {
+        case "today":
+            return Calendar.current.startOfDay(for: parsedDate)
+        case "yesterday":
+            return Calendar.current.startOfDay(for: parsedDate)
+        default:
+            // For time-only inputs like "14:30", SwiftDateParser will use today's date
+            // This matches the original behavior
+            return parsedDate
         }
+    } catch {
+        // If SwiftDateParser fails, provide a helpful error message
+        throw ValidationError("Invalid date/time format. Try: 'today', 'yesterday', 'now', '2 hours ago', 'tomorrow at 3pm', 'YYYY-MM-DD', 'HH:MM', etc.")
     }
-    
-    throw ValidationError("Invalid date/time format. Use 'today', 'yesterday', 'YYYY-MM-DD', 'HH:MM', or 'YYYY-MM-DD HH:MM'")
 }
 
-private func parseDateTime(_ input: String) throws -> Date {
-    let formats = [
-        "yyyy-MM-dd HH:mm",
-        "HH:mm"
-    ]
-    
-    for format in formats {
-        let formatter = DateFormatter()
-        formatter.dateFormat = format
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        
-        if let date = formatter.date(from: input) {
-            if format == "HH:mm" {
-                let calendar = Calendar.current
-                let now = Date()
-                let components = calendar.dateComponents([.hour, .minute], from: date)
-                return calendar.date(bySettingHour: components.hour!, minute: components.minute!, second: 0, of: now)!
-            }
-            return date
-        }
-    }
-    
-    throw ValidationError("Invalid date/time format. Use 'HH:MM' or 'YYYY-MM-DD HH:MM'")
-}

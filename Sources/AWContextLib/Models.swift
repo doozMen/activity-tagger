@@ -28,7 +28,7 @@ public struct EventData: Codable {
 
 public struct Bucket: Codable {
     public let id: String
-    public let name: String
+    public let name: String?
     public let type: String
     public let client: String
     public let hostname: String
@@ -41,6 +41,15 @@ public struct QueryResult: Codable {
 
 public extension DateFormatter {
     static let iso8601Full: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZZZZ"
+        formatter.calendar = Calendar(identifier: .iso8601)
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter
+    }()
+    
+    static let iso8601ActivityWatch: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZZZZ"
         formatter.calendar = Calendar(identifier: .iso8601)
@@ -80,10 +89,40 @@ public extension JSONDecoder {
         decoder.dateDecodingStrategy = .custom { decoder in
             let container = try decoder.singleValueContainer()
             let dateString = try container.decode(String.self)
-            if let date = DateFormatter.iso8601Full.date(from: dateString) {
-                return date
+            
+            // Try multiple date formats that ActivityWatch might use
+            let formatters = [
+                DateFormatter.iso8601Full,
+                ISO8601DateFormatter(), // Standard ISO8601
+                {
+                    let formatter = DateFormatter()
+                    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'+00:00'"
+                    formatter.timeZone = TimeZone(secondsFromGMT: 0)
+                    formatter.locale = Locale(identifier: "en_US_POSIX")
+                    return formatter
+                }(),
+                {
+                    let formatter = DateFormatter()
+                    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'+00:00'"
+                    formatter.timeZone = TimeZone(secondsFromGMT: 0)
+                    formatter.locale = Locale(identifier: "en_US_POSIX")
+                    return formatter
+                }()
+            ]
+            
+            for formatter in formatters {
+                if let iso8601Formatter = formatter as? ISO8601DateFormatter {
+                    if let date = iso8601Formatter.date(from: dateString) {
+                        return date
+                    }
+                } else if let dateFormatter = formatter as? DateFormatter {
+                    if let date = dateFormatter.date(from: dateString) {
+                        return date
+                    }
+                }
             }
-            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Invalid date format")
+            
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Invalid date format: \(dateString)")
         }
         return decoder
     }()
