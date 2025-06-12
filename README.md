@@ -61,8 +61,17 @@ aw-context summary --date 2025-06-12
 
 ### Enrich Activities
 ```bash
-# Show activities with nearest context
+# Today (default)
+aw-context enrich
+
+# Today explicitly
+aw-context enrich --start today
+
+# Specific time range
 aw-context enrich --start "09:00" --end "10:00"
+
+# Yesterday
+aw-context enrich --start yesterday
 ```
 
 ## Data Storage
