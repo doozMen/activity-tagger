@@ -38,11 +38,15 @@ aw-context add "Working on CA-5006 deep linking" --tags ios,bugfix
 
 ### Query Contexts
 ```bash
-# Today
-aw-context query --start today
+# Today (default)
+aw-context query
+
+# Specific date
+aw-context query yesterday
+aw-context query 2024-12-06
 
 # Date range
-aw-context query --start 2025-06-12 --end 2025-06-13
+aw-context query today --end tomorrow
 ```
 
 ### Search by Tag
@@ -64,14 +68,15 @@ aw-context summary --date 2025-06-12
 # Today (default)
 aw-context enrich
 
-# Today explicitly
-aw-context enrich --start today
+# Specific date
+aw-context enrich yesterday
+aw-context enrich 2024-12-06
 
-# Specific time range
-aw-context enrich --start "09:00" --end "10:00"
+# Time range (assumes today)
+aw-context enrich 09:00 --end 17:00
 
-# Yesterday
-aw-context enrich --start yesterday
+# Full control
+aw-context enrich --start "2024-12-06 09:00" --end "2024-12-06 17:00"
 ```
 
 ## Data Storage

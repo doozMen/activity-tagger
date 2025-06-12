@@ -42,13 +42,17 @@ public struct Add: AsyncParsableCommand {
 
 public struct Query: AsyncParsableCommand {
     public static let configuration = CommandConfiguration(
-        abstract: "Query contexts by date range"
+        abstract: "Query contexts by date range",
+        discussion: "Query contexts for a specific date or date range. Examples:\n  aw-context query today\n  aw-context query yesterday\n  aw-context query 2024-12-06\n  aw-context query today --end tomorrow"
     )
     
-    @Option(name: .long, help: "Start date (YYYY-MM-DD or 'today', 'yesterday')")
-    public var start: String
+    @Argument(help: "Date to query (YYYY-MM-DD, 'today', 'yesterday')")
+    public var date: String = "today"
     
-    @Option(name: .long, help: "End date (YYYY-MM-DD or 'today', 'yesterday')")
+    @Option(name: .long, help: "Override start date")
+    public var start: String?
+    
+    @Option(name: .long, help: "End date for range queries")
     public var end: String?
     
     public init() {}
@@ -56,8 +60,9 @@ public struct Query: AsyncParsableCommand {
     public func run() async throws {
         let manager = try ContextManager()
         
-        let startDate = try parseDate(start)
-        let endDate = try parseDate(end ?? start)
+        // Use explicit start if provided, otherwise use positional argument
+        let startDate = try parseDate(start ?? date)
+        let endDate = try parseDate(end ?? start ?? date)
         
         let entries = try manager.queryByTimeRange(start: startDate, end: endDate)
         
@@ -173,13 +178,17 @@ public struct Summary: AsyncParsableCommand {
 
 public struct Enrich: AsyncParsableCommand {
     public static let configuration = CommandConfiguration(
-        abstract: "Show ActivityWatch events with nearest context"
+        abstract: "Show ActivityWatch events with nearest context",
+        discussion: "Enrich ActivityWatch events with context information. Examples:\n  aw-context enrich today\n  aw-context enrich yesterday\n  aw-context enrich 09:00 --end 17:00\n  aw-context enrich 2024-12-06"
     )
     
-    @Option(name: .long, help: "Start date/time (YYYY-MM-DD, HH:MM, 'today', 'yesterday', or full datetime)")
+    @Argument(help: "Date/time to enrich (YYYY-MM-DD, HH:MM, 'today', 'yesterday')")
+    public var date: String = "today"
+    
+    @Option(name: .long, help: "Override start date/time")
     public var start: String?
     
-    @Option(name: .long, help: "End date/time (YYYY-MM-DD, HH:MM, 'today', 'yesterday', or full datetime)")
+    @Option(name: .long, help: "End date/time")
     public var end: String?
     
     @Option(name: .long, help: "Context window in minutes")
@@ -191,22 +200,22 @@ public struct Enrich: AsyncParsableCommand {
         let startDate: Date
         let endDate: Date
         
-        if let startStr = start {
-            startDate = try parseDateTimeOrNatural(startStr)
-        } else {
-            // Default to today's start
-            startDate = Calendar.current.startOfDay(for: Date())
-        }
+        // Use explicit start if provided, otherwise use positional argument
+        let startStr = start ?? date
+        startDate = try parseDateTimeOrNatural(startStr)
         
         if let endStr = end {
             endDate = try parseDateTimeOrNatural(endStr)
-        } else if start != nil {
-            // If start is provided but not end, default to end of that day
-            let calendar = Calendar.current
-            endDate = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: startDate))!.addingTimeInterval(-1)
         } else {
-            // Default to current time
-            endDate = Date()
+            // If no end specified, use end of day for date inputs, or current time for time inputs
+            if startStr.contains(":") {
+                // Time format - assume same day
+                endDate = Date()
+            } else {
+                // Date format - use end of that day
+                let calendar = Calendar.current
+                endDate = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: startDate))!.addingTimeInterval(-1)
+            }
         }
         
         let awClient = try ActivityWatchClient()

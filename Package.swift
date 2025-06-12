@@ -1,6 +1,6 @@
 // swift-tools-version: 6.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
-// Package Version: 1.1.0
+// Package Version: 0.1.0
 
 import PackageDescription
 
