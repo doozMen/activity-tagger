@@ -3,11 +3,11 @@ import AsyncHTTPClient
 import NIOCore
 import NIOHTTP1
 
-class ActivityWatchClient {
+public class ActivityWatchClient {
     private let httpClient: HTTPClient
     private let baseURL: String
     
-    init(baseURL: String = "http://localhost:5600") throws {
+    public init(baseURL: String = "http://localhost:5600") throws {
         self.httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
         self.baseURL = baseURL
     }
@@ -16,7 +16,7 @@ class ActivityWatchClient {
         try? httpClient.syncShutdown()
     }
     
-    func getBuckets() async throws -> [Bucket] {
+    public func getBuckets() async throws -> [Bucket] {
         let url = "\(baseURL)/api/0/buckets"
         let request = HTTPClientRequest(url: url)
         
@@ -32,7 +32,7 @@ class ActivityWatchClient {
         return Array(bucketDict.values)
     }
     
-    func getEvents(bucketId: String, start: Date, end: Date, limit: Int = 1000) async throws -> [ActivityWatchEvent] {
+    public func getEvents(bucketId: String, start: Date, end: Date, limit: Int = 1000) async throws -> [ActivityWatchEvent] {
         let startISO = DateFormatter.iso8601Full.string(from: start)
         let endISO = DateFormatter.iso8601Full.string(from: end)
         
@@ -59,7 +59,7 @@ class ActivityWatchClient {
         return try JSONDecoder.awDecoder.decode([ActivityWatchEvent].self, from: data)
     }
     
-    func query(timeperiods: [String], query: [String]) async throws -> [[ActivityWatchEvent]] {
+    public func query(timeperiods: [String], query: [String]) async throws -> [[ActivityWatchEvent]] {
         let url = "\(baseURL)/api/0/query"
         
         let payload = [
@@ -85,18 +85,34 @@ class ActivityWatchClient {
         return try JSONDecoder.awDecoder.decode([[ActivityWatchEvent]].self, from: data)
     }
     
-    func findWindowWatcherBucket() async throws -> String? {
+    public func findWindowWatcherBucket() async throws -> String? {
         let buckets = try await getBuckets()
         return buckets.first { $0.type == "currentwindow" }?.id
     }
+    
+    public func getDailySummary(date: Date) async throws -> [String: AppSummary] {
+        // For now, return empty summary
+        // This would normally query ActivityWatch for daily app usage
+        return [:]
+    }
 }
 
-enum ActivityWatchError: LocalizedError {
+public struct AppSummary {
+    public let duration: TimeInterval
+    public let contexts: [String]
+    
+    public init(duration: TimeInterval, contexts: [String]) {
+        self.duration = duration
+        self.contexts = contexts
+    }
+}
+
+public enum ActivityWatchError: LocalizedError {
     case httpError(status: UInt)
     case invalidURL
     case noBucketFound
     
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .httpError(let status):
             return "HTTP error with status code: \(status)"

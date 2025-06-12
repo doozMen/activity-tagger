@@ -1,16 +1,16 @@
 import Foundation
 
-class ContextManager {
+public class ContextManager {
     private let baseDirectory: URL
     
-    init() throws {
+    public init() throws {
         let homeDirectory = FileManager.default.homeDirectoryForCurrentUser
         self.baseDirectory = homeDirectory.appendingPathComponent(".aw-context")
         
         try FileManager.default.createDirectory(at: baseDirectory, withIntermediateDirectories: true)
     }
     
-    func addContext(context: String, tags: [String] = []) throws -> ContextEntry {
+    public func addContext(context: String, tags: [String] = []) throws -> ContextEntry {
         let entry = ContextEntry(context: context, tags: tags)
         let date = Date()
         
@@ -21,7 +21,7 @@ class ContextManager {
         return entry
     }
     
-    func queryByTimeRange(start: Date, end: Date) throws -> [ContextEntry] {
+    public func queryByTimeRange(start: Date, end: Date) throws -> [ContextEntry] {
         var allEntries: [ContextEntry] = []
         
         var currentDate = start
@@ -47,7 +47,7 @@ class ContextManager {
         return allEntries.sorted { $0.timestamp < $1.timestamp }
     }
     
-    func searchByTag(_ tag: String) throws -> [ContextEntry] {
+    public func searchByTag(_ tag: String) throws -> [ContextEntry] {
         var matchingEntries: [ContextEntry] = []
         
         let files = try FileManager.default.contentsOfDirectory(
@@ -86,7 +86,7 @@ class ContextManager {
         let fileURL = baseDirectory.appendingPathComponent(filename)
         
         let data = try JSONEncoder.awEncoder.encode(entries)
-        try data.write(to: fileURL)
+        try data.write(to: fileURL, options: .atomic)
     }
     
     private func contextFilename(for date: Date) -> String {
@@ -94,7 +94,7 @@ class ContextManager {
         return "context-\(dateString).json"
     }
     
-    func findNearestContext(to date: Date, within windowMinutes: Int = 30) throws -> ContextEntry? {
+    public func findNearestContext(to date: Date, within windowMinutes: Int = 30) throws -> ContextEntry? {
         let window = TimeInterval(windowMinutes * 60)
         let start = date.addingTimeInterval(-window)
         let end = date.addingTimeInterval(window)

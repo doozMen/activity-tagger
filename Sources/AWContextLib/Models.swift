@@ -1,12 +1,12 @@
 import Foundation
 
-struct ContextEntry: Codable {
-    let id: String
-    let timestamp: Date
-    let context: String
-    let tags: [String]
+public struct ContextEntry: Codable {
+    public let id: String
+    public let timestamp: Date
+    public let context: String
+    public let tags: [String]
     
-    init(context: String, tags: [String] = []) {
+    public init(context: String, tags: [String] = []) {
         self.id = UUID().uuidString
         self.timestamp = Date()
         self.context = context
@@ -14,32 +14,32 @@ struct ContextEntry: Codable {
     }
 }
 
-struct ActivityWatchEvent: Codable {
-    let id: Int?
-    let timestamp: Date
-    let duration: Double
-    let data: EventData
+public struct ActivityWatchEvent: Codable {
+    public let id: Int?
+    public let timestamp: Date
+    public let duration: Double
+    public let data: EventData
 }
 
-struct EventData: Codable {
-    let app: String
-    let title: String
+public struct EventData: Codable {
+    public let app: String
+    public let title: String
 }
 
-struct Bucket: Codable {
-    let id: String
-    let name: String
-    let type: String
-    let client: String
-    let hostname: String
-    let created: Date
+public struct Bucket: Codable {
+    public let id: String
+    public let name: String
+    public let type: String
+    public let client: String
+    public let hostname: String
+    public let created: Date
 }
 
-struct QueryResult: Codable {
-    let events: [ActivityWatchEvent]
+public struct QueryResult: Codable {
+    public let events: [ActivityWatchEvent]
 }
 
-extension DateFormatter {
+public extension DateFormatter {
     static let iso8601Full: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZZZZ"
@@ -54,20 +54,27 @@ extension DateFormatter {
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter
     }()
+    
+    static let timeFormat: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        return formatter
+    }()
 }
 
-extension JSONEncoder {
+public extension JSONEncoder {
     static let awEncoder: JSONEncoder = {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .custom { date, encoder in
             var container = encoder.singleValueContainer()
             try container.encode(DateFormatter.iso8601Full.string(from: date))
         }
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         return encoder
     }()
 }
 
-extension JSONDecoder {
+public extension JSONDecoder {
     static let awDecoder: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .custom { decoder in

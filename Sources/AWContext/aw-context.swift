@@ -1,4 +1,5 @@
 import ArgumentParser
+import AWContextLib
 
 @main
 struct AWContext: AsyncParsableCommand {
@@ -6,6 +7,6 @@ struct AWContext: AsyncParsableCommand {
         commandName: "aw-context",
         abstract: "Add context annotations to ActivityWatch data",
         version: "1.0.0",
-        subcommands: [Add.self, Query.self, Search.self, Summary.self, Enrich.self]
+        subcommands: [AWContextLib.Add.self, AWContextLib.Query.self, AWContextLib.Search.self, AWContextLib.Summary.self, AWContextLib.Enrich.self]
     )
 }
