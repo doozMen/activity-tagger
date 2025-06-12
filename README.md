@@ -6,6 +6,18 @@ Add context annotations to your ActivityWatch data to track what you were workin
 
 Prerequisites: macOS 12.0+, Swift 6.1+, ActivityWatch running on port 5600
 
+### Using Swift Package Manager (Recommended)
+```bash
+git clone https://github.com/doozMen/activity-tagger.git
+cd activity-tagger/aw-context-tool
+swift package experimental-install
+
+# Add to PATH if not already present
+echo 'export PATH="$HOME/.swiftpm/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+### Manual Installation
 ```bash
 git clone https://github.com/doozMen/activity-tagger.git
 cd activity-tagger/aw-context-tool
