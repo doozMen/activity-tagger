@@ -10,10 +10,13 @@ import { z } from "zod";
 import { execSync } from "child_process";
 import { ContextEntry, ActivityWatchEvent, EnrichedEvent } from "./types.js";
 
+// Path to aw-context binary
+const AW_CONTEXT_PATH = "/Users/stijnwillems/.swiftpm/bin/aw-context";
+
 // Check if aw-context CLI is available
 function checkAwContextInstalled(): boolean {
   try {
-    execSync("which aw-context", { stdio: "ignore" });
+    execSync(`test -f ${AW_CONTEXT_PATH}`, { stdio: "ignore" });
     return true;
   } catch {
     return false;
@@ -23,7 +26,7 @@ function checkAwContextInstalled(): boolean {
 // Execute aw-context commands
 function executeAwContext(args: string[]): string {
   try {
-    const result = execSync(`aw-context ${args.join(" ")}`, {
+    const result = execSync(`${AW_CONTEXT_PATH} ${args.join(" ")}`, {
       encoding: "utf-8",
       stdio: ["ignore", "pipe", "pipe"],
     });
@@ -35,19 +38,46 @@ function executeAwContext(args: string[]): string {
 
 // Parse the output from various aw-context commands
 export function parseContextList(output: string): ContextEntry[] {
-  const lines = output.split("\n").filter(line => line.trim());
   const entries: ContextEntry[] = [];
   
-  for (const line of lines) {
-    // Expected format: "ID: <id> | Time: <time> | Context: <context> | Tags: <tags>"
-    const match = line.match(/ID:\s*(\S+)\s*\|\s*Time:\s*([^|]+)\s*\|\s*Context:\s*([^|]+)\s*\|\s*Tags:\s*(.+)/);
-    if (match) {
-      const [_, id, timestamp, context, tagsStr] = match;
-      const tags = tagsStr.split(",").map(t => t.trim()).filter(t => t);
+  if (!output || output.includes("No contexts found")) {
+    return entries;
+  }
+  
+  // Split by double newline to separate entries
+  const blocks = output.split(/\n\n+/).filter(block => block.trim());
+  
+  for (const block of blocks) {
+    const lines = block.split('\n').filter(line => line.trim());
+    if (lines.length === 0) continue;
+    
+    // Skip the "Found X context(s):" line
+    if (lines[0].includes("Found") && lines[0].includes("context(s)")) continue;
+    
+    // First line should be the timestamp
+    const timestampMatch = lines[0].match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z$/);
+    if (!timestampMatch) continue;
+    
+    const timestamp = lines[0];
+    let context = "";
+    let tags: string[] = [];
+    
+    // Parse remaining lines
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (line.startsWith("Tags:")) {
+        const tagsStr = line.substring(5).trim();
+        tags = tagsStr.split(",").map(t => t.trim()).filter(t => t);
+      } else if (line) {
+        context = line;
+      }
+    }
+    
+    if (context) {
       entries.push({
-        id: id.trim(),
-        timestamp: timestamp.trim(),
-        context: context.trim(),
+        id: `${Date.parse(timestamp)}-${Math.random().toString(36).substr(2, 9)}`, // Generate ID from timestamp
+        timestamp,
+        context,
         tags
       });
     }
